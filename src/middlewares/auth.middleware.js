@@ -21,8 +21,10 @@ export const protect = async (req, res, next) => {
 
         if (decoded.role === 'USER') {
             req.user = await prisma.user.findUnique({ where: { id: decoded.id } });
+            req.user.role = 'USER'; // Attach role
         } else if (decoded.role === 'MAID') {
             req.maid = await prisma.maid.findUnique({ where: { id: decoded.id } });
+            req.maid.role = 'MAID'; // Attach role
         } else {
             return res.status(401).json({ message: 'Invalid role' });
         }
