@@ -21,6 +21,8 @@ export const createMaidHire = async (req, res, next) => {
                 prefered_work_time,
                 house_photo,
                 total_amount: parseFloat(total_amount),
+                acceptance_status: 'Pending', // Default value
+                payment_status: 'Pending' // Default value
             },
         });
 
