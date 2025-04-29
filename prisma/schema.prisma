@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../node_modules/.prisma/client"
@@ -15,22 +9,24 @@ datasource db {
 }
 
 model User {
-  id                Int      @id @default(autoincrement())
-  full_name         String
-  email             String   @unique
-  password          String
-  gender            String
-  cnic_number       String   @unique
-  contact_number    String
-  state             String
-  city              String
-  current_address   String
-  marital_Status    String
-  profile_photo     String?  // Store file path
-  cnic_photo_front  String?  // Store file path
-  cnic_photo_back   String?  // Store file path
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id               Int      @id @default(autoincrement())
+  full_name        String
+  email            String   @unique
+  password         String
+  gender           String
+  cnic_number      String   @unique
+  contact_number   String
+  state            String
+  city             String
+  current_address  String
+  marital_Status   String
+  profile_photo    String? // Store file path
+  cnic_photo_front String? // Store file path
+  cnic_photo_back  String? // Store file path
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  maidHires MaidHire[]
 }
 
 model Maid {
@@ -56,20 +52,23 @@ model Maid {
 }
 
 model MaidHire {
-  id                 Int      @id @default(autoincrement())
-  user_id            Int
-  maid_id            Int
-  house_size         Float
-  no_of_portions     Int
-  no_of_peoples      Int
-  hired_skills       Json
-  prefered_work_time String
-  house_photo        String   // Base64 image
-  acceptance_status  String
-  payment_status     String
-  total_amount       Float
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  id                  Int      @id @default(autoincrement())
+  user_id             Int
+  maid_id             Int
+  house_size          Float
+  no_of_portions      Int
+  no_of_peoples       Int
+  hired_skills        Json
+  preferred_work_time String
+  house_photo         String // Base64 image
+  acceptance_status   String
+  payment_status      String
+  total_amount        Float
+  user_rating         Int // Rating given by maid to user
+  maid_rating         Int // Rating given by user to maid
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id])
+  maid Maid @relation(fields: [maid_id], references: [id])
 }
-
-

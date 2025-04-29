@@ -37,10 +37,11 @@ export const maidSignup = async (req, res) => {
 
         const token = jwt.sign({ id: maid.id, role: 'MAID' }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 
+        const { password: _, ...maidWithoutPassword } = maid; // Exclude password
         res.status(201).json({
             message: 'Maid registered successfully',
             token,
-            maid,
+            maid: maidWithoutPassword,
         });
 
     } catch (error) {
@@ -69,7 +70,8 @@ export const maidLogin = async (req, res, next) => {
             { expiresIn: JWT_EXPIRES_IN }
         );
 
-        res.json({ token, maid: { id: maid.id, full_name: maid.full_name, email: maid.email } });
+        const { password: _, ...maidWithoutPassword } = maid; // Exclude password
+        res.json({ token, maid: maidWithoutPassword });
     } catch (error) {
         console.error('Maid login error:', error);
         next(error);
