@@ -38,10 +38,12 @@ export const userSignup = async (req, res,next) => {
         // Generate Token
         const token = jwt.sign({ id: user.id, role: 'USER' }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 
+        const { password: _, ...userWithoutPassword } = user; // Exclude password
+
         res.status(201).json({
             message: 'User registered successfully',
             token,
-            user,
+            userWithoutPassword,
         });
 
     } catch (error) {
@@ -70,9 +72,110 @@ export const userLogin = async (req, res, next) => {
             { expiresIn: JWT_EXPIRES_IN }
         );
 
-        res.json({ token, user: { id: user.id, full_name: user.full_name, email: user.email } });
+        const { password: _, ...userWithoutPassword } = user; // Exclude password
+
+        res.json({ token, user: userWithoutPassword });
     } catch (error) {
         console.error('User login error:', error);
+        next(error);
+    }
+};
+
+export const updateUserPassword = async (req, res, next) => {
+    try {
+        const { id } = req.user; // Authenticated user
+        const { oldPassword, newPassword } = req.body;
+
+        const user = await prisma.user.findUnique({ where: { id } });
+
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const isPasswordValid = await comparePassword(oldPassword, user.password);
+        if (!isPasswordValid) return res.status(400).json({ message: 'Old password is incorrect' });
+
+        const hashedPassword = await hashPassword(newPassword);
+        await prisma.user.update({
+            where: { id },
+            data: { password: hashedPassword },
+        });
+
+        res.status(200).json({ message: 'Password updated successfully' });
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+};
+
+export const updateUserProfile = async (req, res, next) => {
+    try {
+        if (req.maid) {
+            return res.status(403).json({ message: 'Not authorized to update user profile' });
+        }
+
+        const { id } = req.user; // Authenticated user
+        const data = req.body;
+
+        // Prevent updating restricted fields
+        delete data.id;
+        delete data.password;
+        delete data.createdAt;
+        delete data.updatedAt;
+
+        const updatedUser = await prisma.user.update({
+            where: { id },
+            data,
+        });
+
+        const { password, ...userWithoutPassword } = updatedUser;
+        res.status(200).json({ message: 'Profile updated successfully', updatedUser: userWithoutPassword });
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+};
+
+export const getUserDetails = async (req, res, next) => {
+    try {
+        const { user_id } = req.params;
+        const { role, id } = req.user || req.maid;
+
+        const user = await prisma.user.findUnique({
+            where: { id: parseInt(user_id) },
+        });
+
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        if (role === 'USER' && id !== parseInt(user_id)) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        if (role === 'MAID') {
+            const maidHire = await prisma.maidHire.findFirst({
+                where: { user_id: parseInt(user_id), maid_id: id },
+            });
+
+            if (!maidHire) {
+                return res.status(403).json({ message: 'Not authorized' });
+            }
+
+            const maidHirePayed = await prisma.maidHire.findFirst({
+                where: { user_id: parseInt(user_id), maid_id: id ,payment_status: 'Paid'},
+            });
+
+            if (!maidHirePayed) {
+                // Hide sensitive fields if no successful order exists
+                user.email = '';
+                user.cnic_number = '';
+                user.contact_number = '';
+                user.cnic_photo_front = '';
+                user.cnic_photo_back = '';
+            }
+        }
+
+        const { password, ...userWithoutPassword } = user;
+        res.status(200).json(userWithoutPassword);
+    } catch (error) {
+        console.error(error);
         next(error);
     }
 };
