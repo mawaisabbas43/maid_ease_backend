@@ -149,31 +149,26 @@ export const getAllMaids = async (req, res, next) => {
                 profile_description: true,
                 profile_title: true,
                 createdAt: true,
-                _count: {
-                    select: {
-                        maidHires: true, // Count of orders
-                    },
-                },
             },
         });
 
-        const maidsWithRatings = await Promise.all(
+        const maidsWithStats = await Promise.all(
             maids.map(async (maid) => {
-                const ratings = await prisma.maidHire.groupBy({
-                    by: ['maid_rating'],
+                const hireCount = await prisma.maidHire.count({ where: { maid_id: maid.id } });
+                const ratings = await prisma.maidHire.findMany({
                     where: { maid_id: maid.id, maid_rating: { not: 0 } },
-                    _count: { maid_rating: true },
+                    select: { maid_rating: true },
                 });
 
+                const ratingCount = ratings.length;
                 const averageRating =
-                    ratings.reduce((sum, r) => sum + r.maid_rating * r._count.maid_rating, 0) /
-                    ratings.reduce((sum, r) => sum + r._count.maid_rating, 0);
+                    ratings.reduce((sum, r) => sum + r.maid_rating, 0) / (ratingCount || 1);
 
-                return { ...maid, averageRating: averageRating || 0, ratingsCount: ratings.length };
+                return { ...maid, hireCount, ratingCount, averageRating: averageRating || 0 };
             })
         );
 
-        res.status(200).json(maidsWithRatings);
+        res.status(200).json(maidsWithStats);
     } catch (error) {
         console.error(error);
         next(error);
@@ -201,27 +196,22 @@ export const getMaidById = async (req, res, next) => {
                 profile_description: true,
                 profile_title: true,
                 createdAt: true,
-                _count: {
-                    select: {
-                        maidHires: true,
-                    },
-                },
             },
         });
 
         if (!maid) return res.status(404).json({ message: 'Maid not found' });
 
-        const ratings = await prisma.maidHire.groupBy({
-            by: ['maid_rating'],
+        const hireCount = await prisma.maidHire.count({ where: { maid_id: maid.id } });
+        const ratings = await prisma.maidHire.findMany({
             where: { maid_id: maid.id, maid_rating: { not: 0 } },
-            _count: { maid_rating: true },
+            select: { maid_rating: true },
         });
 
+        const ratingCount = ratings.length;
         const averageRating =
-            ratings.reduce((sum, r) => sum + r.maid_rating * r._count.maid_rating, 0) /
-            ratings.reduce((sum, r) => sum + r._count.maid_rating, 0);
+            ratings.reduce((sum, r) => sum + r.maid_rating, 0) / (ratingCount || 1);
 
-        res.status(200).json({ ...maid, averageRating: averageRating || 0, ratingsCount: ratings.length });
+        res.status(200).json({ ...maid, hireCount, ratingCount, averageRating: averageRating || 0 });
     } catch (error) {
         console.error(error);
         next(error);
@@ -257,7 +247,6 @@ export const getAuthMaidDetails = async (req, res, next) => {
             });
 
             if (!maidHirePaid) {
-                // Hide sensitive fields if no successful payment exists
                 maid.email = '';
                 maid.cnic_number = '';
                 maid.contact_number = '';
@@ -266,8 +255,18 @@ export const getAuthMaidDetails = async (req, res, next) => {
             }
         }
 
+        const hireCount = await prisma.maidHire.count({ where: { maid_id: maid.id } });
+        const ratings = await prisma.maidHire.findMany({
+            where: { maid_id: maid.id, maid_rating: { not: 0 } },
+            select: { maid_rating: true },
+        });
+
+        const ratingCount = ratings.length;
+        const averageRating =
+            ratings.reduce((sum, r) => sum + r.maid_rating, 0) / (ratingCount || 1);
+
         const { password, ...maidWithoutPassword } = maid;
-        res.status(200).json(maidWithoutPassword);
+        res.status(200).json({ ...maidWithoutPassword, hireCount, ratingCount, averageRating });
     } catch (error) {
         console.error(error);
         next(error);

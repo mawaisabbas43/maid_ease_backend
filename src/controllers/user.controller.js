@@ -159,11 +159,10 @@ export const getUserDetails = async (req, res, next) => {
             }
 
             const maidHirePayed = await prisma.maidHire.findFirst({
-                where: { user_id: parseInt(user_id), maid_id: id ,payment_status: 'Paid'},
+                where: { user_id: parseInt(user_id), maid_id: id, payment_status: 'Paid' },
             });
 
             if (!maidHirePayed) {
-                // Hide sensitive fields if no successful order exists
                 user.email = '';
                 user.cnic_number = '';
                 user.contact_number = '';
@@ -172,8 +171,18 @@ export const getUserDetails = async (req, res, next) => {
             }
         }
 
+        const hireCount = await prisma.maidHire.count({ where: { user_id: user.id } });
+        const ratings = await prisma.maidHire.findMany({
+            where: { user_id: user.id, user_rating: { not: 0 } },
+            select: { user_rating: true },
+        });
+
+        const ratingCount = ratings.length;
+        const averageRating =
+            ratings.reduce((sum, r) => sum + r.user_rating, 0) / (ratingCount || 1);
+
         const { password, ...userWithoutPassword } = user;
-        res.status(200).json(userWithoutPassword);
+        res.status(200).json({ ...userWithoutPassword, hireCount, ratingCount, averageRating });
     } catch (error) {
         console.error(error);
         next(error);

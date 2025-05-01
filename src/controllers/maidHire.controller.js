@@ -239,7 +239,12 @@ export const getMaidRatings = async (req, res, next) => {
             _count: { maid_rating: true },
         });
 
-        res.status(200).json({ ratings });
+        const structuredRatings = ratings.map((r) => ({
+            name: `${r.maid_rating} Star`,
+            value: r._count.maid_rating,
+        }));
+
+        res.status(200).json({ ratings: structuredRatings });
     } catch (error) {
         console.error(error);
         next(error);
@@ -270,7 +275,12 @@ export const getUserRatings = async (req, res, next) => {
             _count: { user_rating: true },
         });
 
-        res.status(200).json({ ratings });
+        const structuredRatings = ratings.map((r) => ({
+            name: `${r.user_rating} Star`,
+            value: r._count.user_rating,
+        }));
+
+        res.status(200).json({ ratings: structuredRatings });
     } catch (error) {
         console.error(error);
         next(error);
