@@ -20,9 +20,9 @@ model User {
   city             String
   current_address  String
   marital_Status   String
-  profile_photo    String? // Store file path
-  cnic_photo_front String? // Store file path
-  cnic_photo_back  String? // Store file path
+  profile_photo    String?  @db.LongText // Updated to LongText
+  cnic_photo_front String?  @db.LongText // Updated to LongText
+  cnic_photo_back  String?  @db.LongText // Updated to LongText
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -46,9 +46,9 @@ model Maid {
   job_type            String
   profile_description String?
   profile_title       String?
-  profile_photo       String? // Store file path
-  cnic_photo_front    String? // Store file path
-  cnic_photo_back     String? // Store file path
+  profile_photo       String?  @db.LongText // Updated to LongText
+  cnic_photo_front    String?  @db.LongText // Updated to LongText
+  cnic_photo_back     String?  @db.LongText // Updated to LongText
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
@@ -64,7 +64,7 @@ model MaidHire {
   no_of_peoples       Int
   hired_skills        Json
   preferred_work_time String
-  house_photo         String // Base64 image
+  house_photo         String   @db.LongText // Updated to LongText
   acceptance_status   String
   payment_status      String
   total_amount        Float

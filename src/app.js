@@ -4,13 +4,24 @@ import morgan from 'morgan';
 import { errorHandler } from './middlewares/error.middleware.js';
 import userRoutes from './routes/user.routes.js';
 import maidRoutes from './routes/maid.routes.js';
-import maidHireRoutes from "./routes/maidHire.routes.js";
+import maidHireRoutes from './routes/maidHire.routes.js';
 
 const app = express();
 
-// Middlewares
-app.use(express.json());
-app.use(cors());
+// CORS Configuration
+const corsOptions = {
+  origin: 'http://localhost:3000',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+
+
+// Built-in Middlewares
+app.use(express.json({ limit: '10mb' })); // Increase the limit to 10MB or as needed
+app.use(express.urlencoded({ extended: true, limit: '10mb' })); // For URL-encoded data
 app.use(morgan('dev'));
 
 // Routes
