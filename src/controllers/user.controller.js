@@ -113,17 +113,36 @@ export const updateUserProfile = async (req, res, next) => {
         }
 
         const { id } = req.user; // Authenticated user
-        const data = req.body;
+        const {
+            full_name,
+            gender,
+            cnic_number,
+            contact_number,
+            state,
+            city,
+            current_address,
+            marital_Status,
+            profile_photo,
+            cnic_photo_front,
+            cnic_photo_back,
+        } = req.body;
 
-        // Prevent updating restricted fields
-        delete data.id;
-        delete data.password;
-        delete data.createdAt;
-        delete data.updatedAt;
-
+        // Update only the allowed fields
         const updatedUser = await prisma.user.update({
             where: { id },
-            data,
+            data: {
+                full_name,
+                gender,
+                cnic_number,
+                contact_number,
+                state,
+                city,
+                current_address,
+                marital_Status,
+                profile_photo,
+                cnic_photo_front,
+                cnic_photo_back,
+            },
         });
 
         const { password, ...userWithoutPassword } = updatedUser;
@@ -133,7 +152,6 @@ export const updateUserProfile = async (req, res, next) => {
         next(error);
     }
 };
-
 export const getUserDetails = async (req, res, next) => {
     try {
         const { user_id } = req.params;

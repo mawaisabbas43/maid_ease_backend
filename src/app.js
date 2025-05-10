@@ -20,8 +20,8 @@ app.use(cors(corsOptions));
 
 
 // Built-in Middlewares
-app.use(express.json({ limit: '10mb' })); // Increase the limit to 10MB or as needed
-app.use(express.urlencoded({ extended: true, limit: '10mb' })); // For URL-encoded data
+app.use(express.json({ limit: '20mb' })); // Increase the limit to 20MB
+app.use(express.urlencoded({ extended: true, limit: '20mb' })); // For URL-encoded data
 app.use(morgan('dev'));
 
 // Routes
