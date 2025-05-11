@@ -1,9 +1,15 @@
 import express from 'express';
 import {
-    createMaidHire, getMaidHireRecordsForMaid, getMaidHireRecordsForUser, getMaidRatings, getUserRatings,
+    createMaidHire,
+    getMaidHireRecordById,
+    getMaidHireRecordsForMaid,
+    getMaidHireRecordsForUser,
+    getMaidRatings,
+    getUserRatings,
     updateAcceptanceStatus,
     updateMaidRating,
-    updatePaymentStatus, updateUserRating
+    updatePaymentStatus,
+    updateUserRating
 } from '../controllers/maidHire.controller.js';
 import { protect } from '../middlewares/auth.middleware.js';
 
@@ -29,7 +35,10 @@ router.get('/rating/user/:user_id', protect, getUserRatings);
 
 // Route to get maid hire records for a maid (Maid only)
 router.get('/maid', protect, getMaidHireRecordsForMaid);
+
 // Route to get maid hire records for a user (User only)
 router.get('/user', protect, getMaidHireRecordsForUser);
 
+// Route to get a single maid hire record by ID (User or Maid)
+router.get('/single/:maid_hire_id', protect, getMaidHireRecordById);
 export default router;

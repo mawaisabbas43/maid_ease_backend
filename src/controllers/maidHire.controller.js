@@ -35,6 +35,33 @@ export const createMaidHire = async (req, res, next) => {
     }
 };
 
+export const getMaidHireRecordById = async (req, res, next) => {
+    try {
+        const { maid_hire_id } = req.params;
+
+        const maidHire = await prisma.maidHire.findUnique({
+            where: { id: parseInt(maid_hire_id) },
+        });
+
+        if (!maidHire) {
+            return res.status(404).json({ message: 'Maid hire record not found' });
+        }
+
+        // Check authorization
+        if (req.user && req.user.role === 'USER' && maidHire.user_id !== req.user.id) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        if (req.maid && req.maid.role === 'MAID' && maidHire.maid_id !== req.maid.id) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        res.status(200).json({ maidHire });
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+};
 // Get all maidHire records for a maid
 export const getMaidHireRecordsForMaid = async (req, res, next) => {
     try {
