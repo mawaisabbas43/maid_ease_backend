@@ -17,7 +17,7 @@ export const createMaidHire = async (req, res, next) => {
                 house_size: parseFloat(house_size),
                 no_of_portions: parseInt(no_of_portions),
                 no_of_peoples: parseInt(no_of_peoples),
-                hired_skills: JSON.parse(hired_skills),
+                hired_skills: hired_skills,
                 preferred_work_time,
                 house_photo,
                 total_amount: parseFloat(total_amount),
