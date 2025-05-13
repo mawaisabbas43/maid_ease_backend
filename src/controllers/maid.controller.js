@@ -23,27 +23,36 @@ export const maidSignup = async (req, res, next) => {
       job_type,
       profile_photo,
       cnic_photo_front,
-      cnic_photo_back
+      cnic_photo_back,
+      use_ai,
+      profile_title,
+      profile_description,
     } = req.body;
 
-    const existingMaid = await prisma.maid.findUnique({where: {email}});
+    const existingMaid = await prisma.maid.findUnique({ where: { email } });
     if (existingMaid) {
-      return res.status(400).json({message: 'Maid already exists with this email'});
+      return res.status(400).json({ message: 'Maid already exists with this email' });
     }
 
     const hashedPassword = await hashPassword(password);
 
-    // Generate profile title and description
-    const { profile_title, profile_description } = await generateMaidProfile({
-      full_name,
-      gender,
-      state,
-      city,
-      current_address,
-      marital_Status,
-      experience,
-      skills: JSON.parse(skills),
-    });
+    let finalProfileTitle = profile_title;
+    let finalProfileDescription = profile_description;
+
+    if (use_ai) {
+      const generatedProfile = await generateMaidProfile({
+        full_name,
+        gender,
+        state,
+        city,
+        current_address,
+        marital_Status,
+        experience,
+        skills: JSON.parse(skills),
+      });
+      finalProfileTitle = generatedProfile.profile_title;
+      finalProfileDescription = generatedProfile.profile_description;
+    }
 
     const maid = await prisma.maid.create({
       data: {
@@ -58,25 +67,24 @@ export const maidSignup = async (req, res, next) => {
         current_address,
         marital_Status,
         experience: parseFloat(experience),
-        skills: JSON.parse(skills), // You will send skills as JSON string
+        skills: JSON.parse(skills),
         job_type,
-        profile_title,
-        profile_description,
-        profile_photo, // Save Base64 string
-        cnic_photo_front, // Save Base64 string
-        cnic_photo_back // Save Base64 string
+        profile_title: finalProfileTitle,
+        profile_description: finalProfileDescription,
+        profile_photo,
+        cnic_photo_front,
+        cnic_photo_back,
       },
     });
 
-    const token = jwt.sign({id: maid.id, role: 'MAID'}, JWT_SECRET, {expiresIn: JWT_EXPIRES_IN});
+    const token = jwt.sign({ id: maid.id, role: 'MAID' }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 
-    const {password: _, ...maidWithoutPassword} = maid; // Exclude password
+    const { password: _, ...maidWithoutPassword } = maid;
     res.status(201).json({
       message: 'Maid registered successfully',
       token,
       maid: maidWithoutPassword,
     });
-
   } catch (error) {
     console.error(error);
     next(error);
