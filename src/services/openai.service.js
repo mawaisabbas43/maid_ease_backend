@@ -42,6 +42,7 @@ export const generateMaidProfile = async (maidData) => {
     const responseText = chatCompletion.choices[0]?.message?.content?.trim();
 
     const result = JSON.parse(responseText);
+    console.log(result);
     return result;
   } catch (error) {
     console.error('Error generating profile:', error?.response?.data || error.message);
