@@ -44,7 +44,7 @@ model Maid {
   experience          Float
   skills              Json
   job_type            String
-  profile_description String?
+  profile_description String? @db.LongText
   profile_title       String?
   profile_photo       String?  @db.LongText // Updated to LongText
   cnic_photo_front    String?  @db.LongText // Updated to LongText

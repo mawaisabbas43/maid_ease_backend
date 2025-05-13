@@ -2,6 +2,8 @@ import prisma from '../config/db.js';
 import {comparePassword, hashPassword} from '../utils/password.util.js';
 import jwt from 'jsonwebtoken';
 import {JWT_EXPIRES_IN, JWT_SECRET} from '../config/jwt.js';
+import { generateMaidProfile } from '../services/openai.service.js';
+
 
 export const maidSignup = async (req, res, next) => {
   try {
@@ -31,6 +33,18 @@ export const maidSignup = async (req, res, next) => {
 
     const hashedPassword = await hashPassword(password);
 
+    // Generate profile title and description
+    const { profile_title, profile_description } = await generateMaidProfile({
+      full_name,
+      gender,
+      state,
+      city,
+      current_address,
+      marital_Status,
+      experience,
+      skills: JSON.parse(skills),
+    });
+
     const maid = await prisma.maid.create({
       data: {
         full_name,
@@ -46,6 +60,8 @@ export const maidSignup = async (req, res, next) => {
         experience: parseFloat(experience),
         skills: JSON.parse(skills), // You will send skills as JSON string
         job_type,
+        profile_title,
+        profile_description,
         profile_photo, // Save Base64 string
         cnic_photo_front, // Save Base64 string
         cnic_photo_back // Save Base64 string
@@ -139,6 +155,8 @@ export const updateMaidProfile = async (req, res, next) => {
       experience,
       skills,
       job_type,
+      profile_title,
+      profile_description,
       profile_photo,
       cnic_photo_front,
       cnic_photo_back,
@@ -158,6 +176,8 @@ export const updateMaidProfile = async (req, res, next) => {
         experience,
         skills,
         job_type,
+        profile_title,
+        profile_description,
         profile_photo,
         cnic_photo_front,
         cnic_photo_back,
