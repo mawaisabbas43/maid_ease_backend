@@ -9,7 +9,7 @@ const openai = new OpenAI({
 
 export const generateMaidProfile = async (maidData) => {
   const prompt = `
-    Based on the following maid's details, create a professional and concise profile title (max 60 characters) and description (max 200 characters). 
+    Based on the following maid's details, create a professional and concise profile title (max 60 characters) and description (max 200 characters).
     The title should summarize the maid's skills and experience, and the description should highlight their expertise and location.
 
     Details:
@@ -22,7 +22,7 @@ export const generateMaidProfile = async (maidData) => {
     Experience: ${maidData.experience} years
     Skills: ${maidData.skills.join(', ')}
 
-    Return the result in JSON format:
+    Return the result in JSON format, without any markdown or code block:
     {
       "profile_title": "Your generated title here",
       "profile_description": "Your generated description here"
@@ -33,13 +33,16 @@ export const generateMaidProfile = async (maidData) => {
     const chatCompletion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
-        { role: 'system', content: 'You are a helpful assistant who creates professional maid profiles.' },
+        { role: 'system', content: 'You are a helpful assistant who creates professional maid profiles. Only return raw JSON, no markdown.' },
         { role: 'user', content: prompt },
       ],
       temperature: 0.7,
     });
 
-    const responseText = chatCompletion.choices[0]?.message?.content?.trim();
+    let responseText = chatCompletion.choices[0]?.message?.content?.trim();
+
+    // Remove markdown code block if present
+    responseText = responseText.replace(/```(?:json)?/g, '').replace(/```/g, '').trim();
 
     const result = JSON.parse(responseText);
     console.log(result);
