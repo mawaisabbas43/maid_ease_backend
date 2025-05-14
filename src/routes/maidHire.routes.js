@@ -9,7 +9,9 @@ import {
     updateAcceptanceStatus,
     updateMaidRating,
     updatePaymentStatus,
-    updateUserRating
+    updateUserRating,
+    createStripeCheckoutSession,
+    confirmStripePayment
 } from '../controllers/maidHire.controller.js';
 import { protect } from '../middlewares/auth.middleware.js';
 
@@ -23,6 +25,8 @@ router.put('/acceptance-status', protect, updateAcceptanceStatus);
 
 // Route to update payment status (User only)
 router.put('/payment-status', protect, updatePaymentStatus);
+router.post('/stripe/create-session', protect, createStripeCheckoutSession);
+router.post('/stripe/confirm-payment', confirmStripePayment);
 
 // Route to update ratings (update Maid rating by user only)
 router.put('/rating/maid', protect, updateMaidRating);

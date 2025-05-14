@@ -20,7 +20,7 @@ export const generateMaidProfile = async (maidData) => {
         Address: ${maidData.current_address}
         Marital Status: ${maidData.marital_Status}
         Experience: ${maidData.experience} years
-        Skills: ${maidData.skills.join(', ')}
+        Skills: ${maidData.skills}
     
         Return the result in **valid JSON format only**, without any extra text, markdown, or code block:
         {

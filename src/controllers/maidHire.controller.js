@@ -1,4 +1,6 @@
 import prisma from '../config/db.js';
+import Stripe from 'stripe';
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // 1. Create a new maid hire entry
 export const createMaidHire = async (req, res, next) => {
@@ -182,6 +184,73 @@ export const updatePaymentStatus = async (req, res, next) => {
         console.error(error);
         next(error);
     }
+};
+
+export const createStripeCheckoutSession = async (req, res, next) => {
+  try {
+    const { maid_hire_id } = req.body;
+    const maidHire = await prisma.maidHire.findUnique({
+      where: { id: parseInt(maid_hire_id) },
+      include: { user: true, maid: true }
+    });
+    if (!maidHire || !maidHire.user) {
+      return res.status(404).json({ message: 'Maid hire record not found' });
+    }
+
+    // Example: Calculate amount (replace with your logic)
+    const amount = Math.round(maidHire.total_payment * 100); // in cents
+
+    // Prepare skills as description
+    const skills = maidHire.skills?.join(', ') || 'Maid Service';
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [{
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: `Maid Service for ${maidHire.user.full_name}`,
+            description: `Skills: ${skills}`,
+          },
+          unit_amount: amount,
+        },
+        quantity: 1,
+      }],
+      mode: 'payment',
+      customer_email: maidHire.user.email,
+      metadata: { maid_hire_id: maid_hire_id, user_id: maidHire.user.id },
+      success_url: `${process.env.FRONTEND_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.FRONTEND_URL}/payment-cancel`,
+    });
+
+    // Optionally store session id and hire id in your session store if needed
+
+    res.json({ url: session.url });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
+
+export const confirmStripePayment = async (req, res, next) => {
+  try {
+    const { sessionId } = req.body;
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    if (session.payment_status === 'paid') {
+      const maid_hire_id = session.metadata.maid_hire_id;
+      await prisma.maidHire.update({
+        where: { id: parseInt(maid_hire_id) },
+        data: { payment_status: 'Paid' },
+      });
+      return res.status(200).json({ message: 'Payment confirmed and status updated' });
+    } else {
+      return res.status(400).json({ message: 'Payment not completed' });
+    }
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
 };
 
 export const updateMaidRating = async (req, res, next) => {
