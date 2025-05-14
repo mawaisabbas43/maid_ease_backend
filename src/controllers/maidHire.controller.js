@@ -198,30 +198,31 @@ export const createStripeCheckoutSession = async (req, res, next) => {
     }
 
     // Example: Calculate amount (replace with your logic)
-    const amount = Math.round(maidHire.total_payment * 100); // in cents
+    const amount = Math.round(maidHire.total_amount * 100);
 
     // Prepare skills as description
     const skills = maidHire.skills?.join(', ') || 'Maid Service';
 
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [{
-        price_data: {
-          currency: 'usd',
-          product_data: {
-            name: `Maid Service for ${maidHire.user.full_name}`,
-            description: `Skills: ${skills}`,
-          },
-          unit_amount: amount,
-        },
-        quantity: 1,
-      }],
-      mode: 'payment',
-      customer_email: maidHire.user.email,
-      metadata: { maid_hire_id: maid_hire_id, user_id: maidHire.user.id },
-      success_url: `${process.env.FRONTEND_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.FRONTEND_URL}/payment-cancel`,
-    });
+      let params = {
+          payment_method_types: ['card'],
+          line_items: [{
+              price_data: {
+                  currency: 'pkr',
+                  product_data: {
+                      name: `Maid Service for ${maidHire.user.full_name}`,
+                      description: `Skills: ${skills}`,
+                  },
+                  unit_amount: amount,
+              },
+              quantity: 1,
+          }],
+          mode: 'payment',
+          customer_email: maidHire.user.email,
+          metadata: { maid_hire_id: maid_hire_id, user_id: maidHire.user.id },
+          success_url: `${process.env.FRONTEND_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${process.env.FRONTEND_URL}/payment-cancel`,
+      };
+      const session = await stripe.checkout.sessions.create(params);
 
     // Optionally store session id and hire id in your session store if needed
 
@@ -243,7 +244,7 @@ export const confirmStripePayment = async (req, res, next) => {
         where: { id: parseInt(maid_hire_id) },
         data: { payment_status: 'Paid' },
       });
-      return res.status(200).json({ message: 'Payment confirmed and status updated' });
+      return res.status(200).json({ message: 'Payment confirmed and status updated', maid_hire_id });
     } else {
       return res.status(400).json({ message: 'Payment not completed' });
     }
