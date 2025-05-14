@@ -43,7 +43,7 @@ export const userSignup = async (req, res,next) => {
         res.status(201).json({
             message: 'User registered successfully',
             token,
-            userWithoutPassword,
+            user:userWithoutPassword,
         });
 
     } catch (error) {
