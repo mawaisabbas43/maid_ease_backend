@@ -270,7 +270,7 @@ export const confirmStripePayment = async (req, res, next) => {
   try {
     const {sessionId} = req.body;
     const session = await stripe.checkout.sessions.retrieve(sessionId);
-
+    console.log(session);
     if (session.payment_status === 'paid') {
       const maid_hire_id = session.metadata.maid_hire_id;
       await prisma.maidHire.update({
