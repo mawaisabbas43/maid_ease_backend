@@ -20,9 +20,10 @@ model User {
   city             String
   current_address  String
   marital_Status   String
-  profile_photo    String?  @db.LongText // Updated to LongText
-  cnic_photo_front String?  @db.LongText // Updated to LongText
-  cnic_photo_back  String?  @db.LongText // Updated to LongText
+  profile_photo    String?  @db.LongText
+  cnic_photo_front String?  @db.LongText
+  cnic_photo_back  String?  @db.LongText
+  profile_status   String?  @default("ACTIVE")
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -44,11 +45,12 @@ model Maid {
   experience          Float
   skills              Json
   job_type            String
-  profile_description String? @db.LongText
+  profile_description String?  @db.LongText
   profile_title       String?
-  profile_photo       String?  @db.LongText // Updated to LongText
-  cnic_photo_front    String?  @db.LongText // Updated to LongText
-  cnic_photo_back     String?  @db.LongText // Updated to LongText
+  profile_photo       String?  @db.LongText
+  cnic_photo_front    String?  @db.LongText
+  cnic_photo_back     String?  @db.LongText
+  profile_status      String?  @default("ACTIVE")
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
@@ -64,15 +66,24 @@ model MaidHire {
   no_of_peoples       Int
   hired_skills        Json
   preferred_work_time String
-  house_photo         String   @db.LongText // Updated to LongText
+  house_photo         String   @db.LongText
   acceptance_status   String
   payment_status      String
   total_amount        Float
-  user_rating         Int // Rating given by maid to user
-  maid_rating         Int // Rating given by user to maid
+  user_rating         Int
+  maid_rating         Int
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
   user User @relation(fields: [user_id], references: [id])
   maid Maid @relation(fields: [maid_id], references: [id])
+}
+
+model Admin {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
