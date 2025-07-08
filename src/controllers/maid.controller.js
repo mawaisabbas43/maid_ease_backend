@@ -203,6 +203,7 @@ export const updateMaidProfile = async (req, res, next) => {
 export const getAllMaids = async (req, res, next) => {
   try {
     const maids = await prisma.maid.findMany({
+      where: { profile_status: 'ACTIVE' },
       select: {
         id: true,
         full_name: true,
@@ -223,17 +224,17 @@ export const getAllMaids = async (req, res, next) => {
 
     const maidsWithStats = await Promise.all(
         maids.map(async (maid) => {
-          const hireCount = await prisma.maidHire.count({where: {maid_id: maid.id}});
+          const hireCount = await prisma.maidHire.count({ where: { maid_id: maid.id } });
           const ratings = await prisma.maidHire.findMany({
-            where: {maid_id: maid.id, maid_rating: {not: 0}},
-            select: {maid_rating: true},
+            where: { maid_id: maid.id, maid_rating: { not: 0 } },
+            select: { maid_rating: true },
           });
 
           const ratingCount = ratings.length;
           const averageRating =
               ratings.reduce((sum, r) => sum + r.maid_rating, 0) / (ratingCount || 1);
 
-          return {...maid, hireCount, ratingCount, averageRating: averageRating || 0};
+          return { ...maid, hireCount, ratingCount, averageRating: averageRating || 0 };
         })
     );
 
@@ -246,10 +247,10 @@ export const getAllMaids = async (req, res, next) => {
 
 export const getMaidById = async (req, res, next) => {
   try {
-    const {id} = req.params;
+    const { id } = req.params;
 
     const maid = await prisma.maid.findUnique({
-      where: {id: parseInt(id)},
+      where: { id: parseInt(id) },
       select: {
         id: true,
         full_name: true,
@@ -265,15 +266,20 @@ export const getMaidById = async (req, res, next) => {
         profile_description: true,
         profile_title: true,
         createdAt: true,
+        profile_status: true,
       },
     });
 
-    if (!maid) return res.status(404).json({message: 'Maid not found'});
+    if (!maid) return res.status(404).json({ message: 'Maid not found' });
 
-    const hireCount = await prisma.maidHire.count({where: {maid_id: maid.id}});
+    if (maid.profile_status !== 'ACTIVE') {
+      return res.status(403).json({ message: 'Maid profile is not active' });
+    }
+
+    const hireCount = await prisma.maidHire.count({ where: { maid_id: maid.id } });
     const ratings = await prisma.maidHire.findMany({
-      where: {maid_id: maid.id, maid_rating: {not: 0}},
-      select: {maid_rating: true},
+      where: { maid_id: maid.id, maid_rating: { not: 0 } },
+      select: { maid_rating: true },
     });
 
     const ratingCount = ratings.length;
