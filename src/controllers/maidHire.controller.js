@@ -11,6 +11,16 @@ export const createMaidHire = async (req, res, next) => {
         if (!req.user || req.user.role !== 'USER') {
             return res.status(403).json({ message: 'Not authorized' });
         }
+        if (req.user.profile_status !== 'ACTIVE') {
+            return res.status(403).json({ message: 'User profile is not active' });
+        }
+        if (!maid_id) {
+            return res.status(400).json({ message: 'Maid ID is required' });
+        }
+        const maid = await prisma.maid.findUnique({ where: { id: maid_id } });
+        if (!maid || maid.profile_status !== 'ACTIVE') {
+            return res.status(403).json({ message: 'Maid profile is not active' });
+        }
 
         const maidHire = await prisma.maidHire.create({
             data: {
